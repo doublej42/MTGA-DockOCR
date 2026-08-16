@@ -1,0 +1,56 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM/
+ARM64/
+artifacts/
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# .NET user and tooling files
+*.user
+*.userosscache
+*.suo
+*.rsuser
+*.sln.docstates
+*.DotSettings.user
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio, VS Code, and Rider
+.vs/
+.vscode/
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+*.nuget.props
+*.nuget.targets
+
+# Windows App SDK / MSIX output
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_ReSharper*/
+
+# Local secrets and diagnostic output
+claude-api-key.bin
+*.log
+
+# Card data source (large generated/downloaded runtime asset)
+AllPrintings.sqlite
+AllPrintings.sqlite-shm
+AllPrintings.sqlite-wal

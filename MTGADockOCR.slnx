@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MTGADockOCR.Core/MTGADockOCR.Core.csproj" />
+    <Project Path="src/MTGADockOCR/MTGADockOCR.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MTGADockOCR.Tests/MTGADockOCR.Tests.csproj" />
+  </Folder>
+</Solution>

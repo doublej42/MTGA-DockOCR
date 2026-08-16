@@ -1,0 +1,84 @@
+<Window
+    x:Class="MTGADockOCR.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="MTGA Dock OCR">
+    <Grid Padding="24" RowSpacing="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="220" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Spacing="4">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="MTGA Dock OCR" />
+            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Capture a Magic deck with Ctrl+Alt+D." />
+        </StackPanel>
+        <InfoBar x:Name="StatusBar" Grid.Row="1" IsOpen="True" IsClosable="False" Severity="Informational" Title="Ready" Message="The global capture hotkey will be available after setup." />
+        <Grid Grid.Row="2" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="RecognitionResultsText" AcceptsReturn="True" FontFamily="Cascadia Mono" Header="Claude results in returned order" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" />
+            <TextBox x:Name="DeckListText" Grid.Column="1" AcceptsReturn="True" FontFamily="Cascadia Mono" Header="Matched MTGA deck list" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" />
+        </Grid>
+        <StackPanel Grid.Row="3" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+            <Button Click="CopyButton_Click" Content="Copy deck list" />
+        </StackPanel>
+        <StackPanel Grid.Row="4" Spacing="8">
+            <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Capture review" />
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Screenshot 1" />
+                    <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="4">
+                        <Image x:Name="FirstScreenshotImage" Height="160" Stretch="Uniform" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="Screenshot 2" />
+                    <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="4">
+                        <Image x:Name="SecondScreenshotImage" Height="160" Stretch="Uniform" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="4">
+                    <TextBlock Text="Final image sent to Claude" />
+                    <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="4">
+                        <Image x:Name="CombinedScreenshotImage" Height="160" Stretch="Uniform" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                <Button Click="ClearCapturesButton_Click" Content="Clear captures" />
+                <Button x:Name="SendToClaudeButton" Click="SendToClaudeButton_Click" Content="Send to Claude" IsEnabled="False" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="5" Margin="0,18,0,0" Orientation="Horizontal" Spacing="8">
+            <PasswordBox x:Name="ApiKeyInput" MinWidth="320" PlaceholderText="Claude API key" />
+            <Button Click="SaveApiKeyButton_Click" Content="Save API key" />
+            <TextBlock x:Name="ApiKeyStatusText" VerticalAlignment="Center" />
+        </StackPanel>
+        <Grid Grid.Row="6" RowSpacing="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Diagnostic log" />
+            <Button Grid.Column="1" Click="CopyLogButton_Click" Content="Copy log" />
+            <TextBox x:Name="DiagnosticText" Grid.Row="1" Grid.ColumnSpan="2" AcceptsReturn="True" FontFamily="Cascadia Mono" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" />
+        </Grid>
+    </Grid>
+</Window>
