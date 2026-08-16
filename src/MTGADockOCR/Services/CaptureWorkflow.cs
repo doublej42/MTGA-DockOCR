@@ -32,6 +32,10 @@ public sealed class CaptureWorkflow : IDisposable
 
     public event EventHandler<IReadOnlyList<RecognizedCardResult>>? RecognitionResultsReady;
 
+    public event EventHandler<bool>? AnalysisStateChanged;
+
+    public event EventHandler? ClaudeResponseReceived;
+
     public event EventHandler<CaptureReview>? ReviewChanged;
 
     public event EventHandler<string>? DiagnosticLogged;
@@ -124,7 +128,8 @@ public sealed class CaptureWorkflow : IDisposable
 
         Log("User selected Send to Claude.");
         StatusChanged?.Invoke(this, "Sending the reviewed screenshot to Claude.");
-        _ = AnalyzeAsync(imageToAnalyze);
+        AnalysisStateChanged?.Invoke(this, true);
+        _ = Task.Run(() => AnalyzeAsync(imageToAnalyze));
     }
 
     public void ClearCaptures()
@@ -162,7 +167,11 @@ public sealed class CaptureWorkflow : IDisposable
 
             Log($"Claude prompt:{Environment.NewLine}{ClaudeDeckRecognitionService.RecognitionPrompt}");
             var recognitionService = new ClaudeDeckRecognitionService(_httpClient, apiKey);
-            recognitionService.RawResponseReceived += (_, response) => Log($"Claude raw response:{Environment.NewLine}{response}");
+            recognitionService.RawResponseReceived += (_, response) =>
+            {
+                Log($"Claude raw response:{Environment.NewLine}{response}");
+                ClaudeResponseReceived?.Invoke(this, EventArgs.Empty);
+            };
             var recognizedDeck = await recognitionService.RecognizeAsync(image, CancellationToken.None);
             var matchedCards = new List<DeckCard>();
             var recognitionResults = new List<RecognizedCardResult>();
@@ -214,6 +223,8 @@ public sealed class CaptureWorkflow : IDisposable
             {
                 _isAnalyzing = false;
             }
+
+            AnalysisStateChanged?.Invoke(this, false);
         }
     }
 

@@ -9,9 +9,16 @@ namespace MTGADockOCR;
 
 public sealed partial class MainWindow : Window
 {
+    private readonly DispatcherTimer _claudeCountdownTimer;
+    private DateTimeOffset _claudeDeadline;
+    private bool _hasSendableCapture;
+    private bool _isAnalyzing;
+
     public MainWindow()
     {
         InitializeComponent();
+        _claudeCountdownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _claudeCountdownTimer.Tick += (_, _) => UpdateClaudeCountdown();
     }
 
     private void CopyButton_Click(object sender, RoutedEventArgs args)
@@ -69,7 +76,35 @@ public sealed partial class MainWindow : Window
         FirstScreenshotImage.Source = await DecodePngAsync(review.FirstScreenshot);
         SecondScreenshotImage.Source = await DecodePngAsync(review.SecondScreenshot);
         CombinedScreenshotImage.Source = await DecodePngAsync(review.CombinedScreenshot);
-        SendToClaudeButton.IsEnabled = review.CombinedScreenshot is not null;
+        _hasSendableCapture = review.CombinedScreenshot is not null;
+        SendToClaudeButton.IsEnabled = _hasSendableCapture && !_isAnalyzing;
+    }
+
+    internal void SetClaudeAnalysisState(bool isAnalyzing)
+    {
+        _isAnalyzing = isAnalyzing;
+        ClaudeProgressPanel.Visibility = isAnalyzing ? Visibility.Visible : Visibility.Collapsed;
+        ClaudeProgressRing.IsActive = isAnalyzing;
+        SendToClaudeButton.IsEnabled = _hasSendableCapture && !isAnalyzing;
+        ClearCapturesButton.IsEnabled = !isAnalyzing;
+
+        if (isAnalyzing)
+        {
+            _claudeDeadline = DateTimeOffset.Now.AddMinutes(3);
+            UpdateClaudeCountdown();
+            _claudeCountdownTimer.Start();
+        }
+        else
+        {
+            _claudeCountdownTimer.Stop();
+        }
+    }
+
+    internal void SetClaudeResponseReceived()
+    {
+        _claudeCountdownTimer.Stop();
+        ClaudeProgressRing.IsActive = true;
+        ClaudeProgressText.Text = "Claude responded. Matching recognized names against the local card database.";
     }
 
     internal void AppendDiagnostic(string message)
@@ -119,5 +154,16 @@ public sealed partial class MainWindow : Window
         var bitmap = new BitmapImage();
         await bitmap.SetSourceAsync(stream);
         return bitmap;
+    }
+
+    private void UpdateClaudeCountdown()
+    {
+        var remaining = _claudeDeadline - DateTimeOffset.Now;
+        if (remaining < TimeSpan.Zero)
+        {
+            remaining = TimeSpan.Zero;
+        }
+
+        ClaudeProgressText.Text = $"Waiting for Claude. This can take up to 3 minutes ({remaining:mm\\:ss} remaining).";
     }
 }

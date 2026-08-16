@@ -139,6 +139,7 @@ public sealed class UnitTest1
                     CREATE TABLE cards (name TEXT, faceName TEXT, asciiName TEXT, printedName TEXT, language TEXT);
                     INSERT INTO cards VALUES ('Most Decrepit Old Bird // Speak Secrets', 'Most Decrepit Old Bird', NULL, NULL, 'English');
                     INSERT INTO cards VALUES ('Most Decrepit Old Bird // Speak Secrets', 'Speak Secrets', NULL, NULL, 'English');
+                    INSERT INTO cards VALUES ('Rampant Growth', NULL, NULL, NULL, 'English');
                     """;
                 await command.ExecuteNonQueryAsync();
             }
@@ -146,14 +147,68 @@ public sealed class UnitTest1
             var repository = new CardRepository(databasePath);
             var firstFace = await repository.FindExactMatchesAsync("Most Decrepit Old Bird", CancellationToken.None);
             var secondFace = await repository.FindExactMatchesAsync("Speak Secrets", CancellationToken.None);
+            var normalizedWhitespace = await repository.FindExactMatchesAsync("Rampant\u00A0\u200BGrowth", CancellationToken.None);
 
             Assert.Equal(new CardDatabaseMatch("Most Decrepit Old Bird // Speak Secrets", "Most Decrepit Old Bird"), Assert.Single(firstFace));
             Assert.Equal(new CardDatabaseMatch("Most Decrepit Old Bird // Speak Secrets", "Speak Secrets"), Assert.Single(secondFace));
+            Assert.Equal(new CardDatabaseMatch("Rampant Growth", "Rampant Growth"), Assert.Single(normalizedWhitespace));
         }
         finally
         {
             SqliteConnection.ClearAllPools();
             File.Delete(databasePath);
         }
+    }
+
+    [Fact]
+    public async Task CardRepository_MatchesEveryCardFromTheReportedFoundationDeck()
+    {
+        var databasePath = FindWorkspaceFile("AllPrintings.sqlite");
+        var repository = new CardRepository(databasePath);
+        string[] cardNames =
+        [
+            "Thranduil, the Elvenking", "Most Decrepit Old Bird", "Birds of Paradise", "Elvish Mystic",
+            "Legolas's Quick Reflexes", "Deathrite Shaman", "Elvish Elegy", "Arcane Signet", "Bloom Tender",
+            "Elvish Warmaster", "Fauna Shaman", "Guardian of the Halls", "Heroic Intervention", "Rampant Growth",
+            "Wildborn Preserver", "Woodland Weavemaster", "Leaf-Crowned Visionary", "Perennial Gravewarden",
+            "Elrond, Moon-Reader", "Roll-Roll-Roll-Roll", "Toxic Deluge", "Down in the Valley", "Mirkwood Pathmaker",
+            "Necklace of Girion", "Reclamation Sage", "Shower of Arrows", "Springbloom Druid", "Tireless Provisioner",
+            "Unforgiving Aim", "Wood Elves", "Arwen, Weaver of Hope", "Elvish Archdruid", "Shaman of the Pack",
+            "Galadriel of Lothlórien", "Arwen's Gift", "Uncover the Moon-Letters", "Bitter Downfall", "Dawnhand Eulogist",
+            "Celeborn the Wise", "Champions of the Perfect", "Elven Chorus", "Beast Whisperer", "Moon-Vigil Adherents",
+            "Silvan Reveler", "Thranduil's Company", "Door of Destinies", "Lórien Revealed", "Gloom Ripper", "Live or Die",
+            "Voice of the Woods", "Deathbloom Ritualist", "Banner of Kinship", "Vanquisher's Banner", "Bilbo's Burglaring",
+            "Harmonized Crescendo", "Thranduil's Decree", "Haunting Voyage", "Cantankerous Keepers", "Chronicle of Victory",
+            "Island", "Rivendell", "Swamp", "Forest", "Drowned Catacomb", "Shipwreck Marsh", "Undercity Sewers",
+            "Underground River", "Watery Grave", "Deathcap Glade", "Mirkwood", "Overgrown Tomb", "Underground Mortuary",
+            "Woodland Cemetery", "Dreamroot Cascade", "Elvenking's Halls", "Hedge Maze", "Hinterland Harbor", "Command Tower",
+            "Echoing Cavern", "Elven Passage", "Reflecting Pool",
+        ];
+
+        var unresolvedNames = new List<string>();
+        foreach (var cardName in cardNames)
+        {
+            var matches = await repository.FindExactMatchesAsync(cardName, CancellationToken.None);
+            if (matches.Count != 1)
+            {
+                unresolvedNames.Add(cardName);
+            }
+        }
+
+        Assert.True(unresolvedNames.Count == 0, $"Unresolved cards: {string.Join(", ", unresolvedNames)}");
+    }
+
+    private static string FindWorkspaceFile(string fileName)
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            var candidatePath = Path.Combine(directory.FullName, fileName);
+            if (File.Exists(candidatePath))
+            {
+                return candidatePath;
+            }
+        }
+
+        throw new FileNotFoundException($"Could not find {fileName} from the test output directory.");
     }
 }

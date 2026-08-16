@@ -31,6 +31,8 @@ public partial class App : Application
         _captureWorkflow.StatusChanged += OnWorkflowStatusChanged;
         _captureWorkflow.DeckReady += OnDeckReady;
         _captureWorkflow.RecognitionResultsReady += OnRecognitionResultsReady;
+        _captureWorkflow.AnalysisStateChanged += OnAnalysisStateChanged;
+        _captureWorkflow.ClaudeResponseReceived += OnClaudeResponseReceived;
         _captureWorkflow.ReviewChanged += OnReviewChanged;
         _captureWorkflow.DiagnosticLogged += OnDiagnosticLogged;
         _ = ShowApiKeyConfigurationAsync();
@@ -114,6 +116,16 @@ public partial class App : Application
     private void OnRecognitionResultsReady(object? sender, IReadOnlyList<RecognizedCardResult> results)
     {
         _window?.DispatcherQueue.TryEnqueue(() => ((MainWindow)_window).SetRecognitionResults(results));
+    }
+
+    private void OnAnalysisStateChanged(object? sender, bool isAnalyzing)
+    {
+        _window?.DispatcherQueue.TryEnqueue(() => ((MainWindow)_window).SetClaudeAnalysisState(isAnalyzing));
+    }
+
+    private void OnClaudeResponseReceived(object? sender, EventArgs args)
+    {
+        _window?.DispatcherQueue.TryEnqueue(() => ((MainWindow)_window).SetClaudeResponseReceived());
     }
 
     private void OnReviewChanged(object? sender, CaptureReview review)

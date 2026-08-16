@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using System.Globalization;
+using System.Text;
 
 namespace MTGADockOCR.Core.Services;
 
@@ -21,6 +23,7 @@ public sealed class CardRepository
         ArgumentException.ThrowIfNullOrWhiteSpace(recognizedName);
 
         const string query = """
+            WITH matches AS (
                         SELECT DISTINCT
                                 name,
                                 CASE
@@ -28,7 +31,13 @@ public sealed class CardRepository
                                         WHEN name = $name OR asciiName = $name OR printedName = $name THEN name
                                         WHEN name LIKE $name || ' // %' THEN substr(name, 1, instr(name, ' // ') - 1)
                                         WHEN name LIKE '% // ' || $name THEN $name
-                                END AS exportName
+                    END AS exportName,
+                    CASE
+                        WHEN name = $name OR asciiName = $name OR printedName = $name THEN 0
+                        WHEN name LIKE $name || ' // %' THEN 1
+                        WHEN name LIKE '% // ' || $name THEN 2
+                        WHEN faceName = $name THEN 3
+                    END AS matchPriority
             FROM cards
             WHERE language = 'English'
                             AND (
@@ -39,14 +48,17 @@ public sealed class CardRepository
                                     OR name LIKE $name || ' // %'
                                     OR name LIKE '% // ' || $name
                             )
-                        ORDER BY name, exportName
-            LIMIT 10;
+            )
+            SELECT name, exportName
+            FROM matches
+            ORDER BY matchPriority, name, exportName
+            LIMIT 1;
             """;
 
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
         await using var command = new SqliteCommand(query, connection);
-        command.Parameters.AddWithValue("$name", recognizedName.Trim());
+        command.Parameters.AddWithValue("$name", NormalizeLookupName(recognizedName));
 
         return await ReadMatchesAsync(command, cancellationToken);
     }
@@ -88,6 +100,36 @@ public sealed class CardRepository
         }
 
         return matches;
+    }
+
+    private static string NormalizeLookupName(string name)
+    {
+        var builder = new StringBuilder(name.Length);
+        var previousWasWhitespace = false;
+        foreach (var character in name.Trim())
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.Format)
+            {
+                continue;
+            }
+
+            if (char.IsWhiteSpace(character))
+            {
+                if (!previousWasWhitespace)
+                {
+                    builder.Append(' ');
+                }
+
+                previousWasWhitespace = true;
+            }
+            else
+            {
+                builder.Append(character);
+                previousWasWhitespace = false;
+            }
+        }
+
+        return builder.ToString();
     }
 }
 

@@ -18,7 +18,13 @@
             <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="MTGA Dock OCR" />
             <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Capture a Magic deck with Ctrl+Alt+D." />
         </StackPanel>
-        <InfoBar x:Name="StatusBar" Grid.Row="1" IsOpen="True" IsClosable="False" Severity="Informational" Title="Ready" Message="The global capture hotkey will be available after setup." />
+        <StackPanel Grid.Row="1" Spacing="8">
+            <InfoBar x:Name="StatusBar" IsOpen="True" IsClosable="False" Severity="Informational" Title="Ready" Message="The global capture hotkey will be available after setup." />
+            <StackPanel x:Name="ClaudeProgressPanel" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                <ProgressRing x:Name="ClaudeProgressRing" Width="20" Height="20" IsActive="False" />
+                <TextBlock x:Name="ClaudeProgressText" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
         <Grid Grid.Row="2" ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -58,7 +64,7 @@
                 </StackPanel>
             </Grid>
             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
-                <Button Click="ClearCapturesButton_Click" Content="Clear captures" />
+                <Button x:Name="ClearCapturesButton" Click="ClearCapturesButton_Click" Content="Clear captures" />
                 <Button x:Name="SendToClaudeButton" Click="SendToClaudeButton_Click" Content="Send to Claude" IsEnabled="False" />
             </StackPanel>
         </StackPanel>
